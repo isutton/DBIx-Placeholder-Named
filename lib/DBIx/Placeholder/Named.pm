@@ -87,17 +87,17 @@ DBIx::Placeholder::Named - DBI with named placeholders
 
 =head1 SYNOPSIS
 
-use DBIx::Placeholder::Named;
+  use DBIx::Placeholder::Named;
 
-my $dbh = DBIx::Placeholder::Named->connect($dsn, $user, $password)
-  or die DBIx::Placeholder::Named->errstr;
+  my $dbh = DBIx::Placeholder::Named->connect($dsn, $user, $password)
+    or die DBIx::Placeholder::Named->errstr;
 
-my $sth = $dbh->prepare(
-  q{INSERT INTO some_table (this, that) VALUES (:this, :that)}
-)
-  or die $dbh->errstr;
+  my $sth = $dbh->prepare(
+    q{INSERT INTO some_table (this, that) VALUES (:this, :that)}
+  )
+    or die $dbh->errstr;
 
-$sth->execute({ this => $this, that => $that, });
+  $sth->execute({ this => $this, that => $that, });
 
 =head1 DESCRIPTION
 
