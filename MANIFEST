@@ -6,4 +6,7 @@ META.yml
 README
 t/00-load.t
 t/01-smoke.t
+t/02-prefix.t
+t/03-suffix.t
+t/04-both.t
 t/pod.t
