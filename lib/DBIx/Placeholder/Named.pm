@@ -163,6 +163,10 @@ inside quotes or double quotes, etc).
 
 =cut
 
+=head1 THANKS
+
+Gabor Szabo <szabgab@gmail.com> for requesting prefix support.
+
 =head1 AUTHOR
 
 Copyright (c) 2007, Igor Sutton Lopes "<IZUT@cpan.org>". All rights reserved.
