@@ -1,15 +1,18 @@
+# $Id: $
+
 package DBIx::Placeholder::Named;
 
 use warnings;
 use strict;
 
 use base qw(DBI);
-our $VERSION = '0.05';
+our $VERSION = '0.06';
+our $PREFIX  = ':';
+our $SUFFIX  = '';
 
 package DBIx::Placeholder::Named::db;
 
 use SQL::Tokenizer;
-use Data::Dumper;
 use base qw(DBI::db);
 
 sub prepare {
@@ -22,12 +25,19 @@ sub prepare {
     #
     # TODO: someday we can benchmark this piece of code and check if using
     # substr is more efficient.
+
     my @placeholders;
     my @query_tokens = SQL::Tokenizer->tokenize($query);
 
+    my $prefix_length = length($PREFIX);
+    my $suffix_length = length($SUFFIX);
+
     foreach my $token (@query_tokens) {
-        if ( substr( $token, 0, 1 ) eq ':' ) {
-            push @placeholders, substr( $token, 1 );
+        my $token_length = length($token);
+        if ( substr( $token, 0, $prefix_length ) eq $PREFIX and substr( $token, $token_length - $suffix_length, $suffix_length ) eq $SUFFIX ) {
+            my $token_stripped = substr( $token, $prefix_length );
+            $token_stripped = substr( $token_stripped, 0, length($token_stripped) - $suffix_length );
+            push @placeholders, $token_stripped;
             $token = '?';
         }
     }
@@ -36,12 +46,12 @@ sub prepare {
 
     # it's time to call DBI::st::prepare(). we use the modified tokenized
     # query (with all named placeholders substituted by '?').
+
     my $sth = $dbh->SUPER::prepare($new_query)
       or return;
 
     # we can now store the named placeholders array.
-    $sth->{private_dbix_placeholder_named_info} =
-      { placeholders => \@placeholders };
+    $sth->{private_dbix_placeholder_named_info} = { placeholders => \@placeholders };
 
     return $sth;
 }
@@ -62,8 +72,8 @@ sub execute {
         # from the user supplied dictionary.
 
         @params =
-          map { $_[0]->{$_} }
-          @{ $sth->{private_dbix_placeholder_named_info}->{placeholders} };
+          map { $_[0]->{$_} } @{ $sth->{private_dbix_placeholder_named_info}->{placeholders} };
+
     }
     else {
 
@@ -93,16 +103,65 @@ DBIx::Placeholder::Named - DBI with named placeholders
     or die DBIx::Placeholder::Named->errstr;
 
   my $sth = $dbh->prepare(
-    q{INSERT INTO some_table (this, that) VALUES (:this, :that)}
-  )
+    q{ INSERT INTO some_table (this, that) VALUES (:this, :that) }
+  );
     or die $dbh->errstr;
 
   $sth->execute({ this => $this, that => $that, });
+
+  $DBIx::Placeholder::Named::PREFIX = '__';
+  $DBIx::Placeholder::Named::SUFFIX = '**';
+
+  my $sth = $dbh->prepare(
+    q{ INSERT INTO some_table (this, that) VALUES (__this**, __that**) }
+  );
 
 =head1 DESCRIPTION
 
 DBIx::Placeholder::Named is a subclass of DBI, which implements the ability 
 to understand named placeholders.
+
+=head1 VARIABLES
+
+=over 4
+
+=item $DBIx::Placeholder::Named::PREFIX
+
+This variable holds the placeholder's prefix, being set to ':' by default. You 
+can override it like this:
+
+  $DBIx::Placeholder::Named::PREFIX = '__';
+
+=item $DBIx::Placeholder::Named::SUFFIX
+
+This variable holds the placeholder's suffix, being set to '' by default. You
+can override it like this:
+
+  $DBIx::Placeholder::Named::SUFFIX = '**';
+
+=back
+
+=head1 METHODS
+
+=over 4
+
+=item DBIx::Placeholder::Named::db::prepare()
+
+This method, overloaded from L<DBI|DBI::db>, is responsible to create a prepared 
+statement for further execution. It is overloaded to accept a SQL query which
+has named placeholders, like:
+
+  SELECT a, b, c FROM t WHERE id = :id
+
+It uses L<SQL::Tokenizer|SQL::Tokenizer> to correctly tokenize the SQL query,
+preventing extract erroneous placeholders (date/time specifications, comments,
+inside quotes or double quotes, etc).
+
+=item DBIx::Placeholder::Named::st::execute()
+
+=back
+
+=cut
 
 =head1 AUTHOR
 
