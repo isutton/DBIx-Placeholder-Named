@@ -1,15 +1,19 @@
-Tao-DBI
+DBIx::Placeholder::Named
 
-The README is used to introduce the module and provide instructions on
-how to install the module, any machine dependencies it may have (for
-example C compilers and installed libraries) and any other information
-that should be provided before the module is installed.
+DBIx::Placeholder::Named is a subclass of DBI, which implements the ability 
+to understand named placeholders.
 
-A README file is required for CPAN modules since CPAN extracts the README
-file from a module distribution so that people browsing the archive
-can use it get an idea of the modules uses. It is usually a good idea
-to provide version information here so that people can decide whether
-fixes for the module are worth downloading.
+  use DBIx::Placeholder::Named;
+
+  my $dbh = DBIx::Placeholder::Named->connect($dsn, $user, $password)
+    or die DBIx::Placeholder::Named->errstr;
+
+  my $sth = $dbh->prepare(
+    q{ INSERT INTO some_table (this, that) VALUES (:this, :that) }
+  );
+    or die $dbh->errstr;
+
+  $sth->execute({ this => $this, that => $that, });
 
 INSTALLATION
 
@@ -25,25 +29,25 @@ SUPPORT AND DOCUMENTATION
 
 After installing, you can find documentation for this module with the perldoc command.
 
-    perldoc Tao::DBI
+    perldoc DBIx::Placeholder::Named
 
 You can also look for information at:
 
     Search CPAN
-        http://search.cpan.org/dist/Tao-DBI
+        http://search.cpan.org/dist/DBIx-Placeholder-Named
 
     CPAN Request Tracker:
-        http://rt.cpan.org/NoAuth/Bugs.html?Dist=Tao-DBI
+        http://rt.cpan.org/NoAuth/Bugs.html?Dist=DBIx-Placeholder-Named
 
     AnnoCPAN, annotated CPAN documentation:
-        http://annocpan.org/dist/Tao-DBI
+        http://annocpan.org/dist/DBIx-Placeholder-Named
 
     CPAN Ratings:
-        http://cpanratings.perl.org/d/Tao-DBI
+        http://cpanratings.perl.org/d/DBIx-Placeholder-Named
 
 COPYRIGHT AND LICENCE
 
-Copyright (C) 2007 Igor Sutton
+Copyright (C) 2007, 2008, 2009 Igor Sutton
 
 This program is free software; you can redistribute it and/or modify it
 under the same terms as Perl itself.
